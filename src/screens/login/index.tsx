@@ -6,11 +6,14 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import Container from '../../components/Container';
-import styles from './styles';
 import {NavigationProp, useNavigation} from '@react-navigation/native';
+import auth from '@react-native-firebase/auth';
+
+import Container from '../../components/Container';
 import colors from '../../utils/colors';
 import CustomTextInput from '../../components/CustomTextInput';
+
+import styles from './styles';
 
 const Login = () => {
   const navigation = useNavigation<NavigationProp<any>>();
@@ -22,7 +25,8 @@ const Login = () => {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = () => {
+  // handling login functionality
+  const handleLogin = async () => {
     if (email.trim() == '') {
       setEmailValid(false);
       return;
@@ -36,17 +40,26 @@ const Login = () => {
 
     setIsLoading(true);
 
-    setTimeout(() => {
+    try {
+      let response = await auth().signInWithEmailAndPassword(email, password);
+      if (response) {
+        navigation.navigate('Dashboard');
+      }
       setIsLoading(false);
-      navigation.navigate('Dashboard');
-    }, 2 * 1000);
+    } catch (e) {
+      console.error(e);
+      setIsLoading(false);
+      alert('Email or Password is incorrect!');
+    }
   };
 
+  // handling email input
   const handleEmailInput = (emailText: string) => {
     setEmail(emailText);
     setEmailValid(true);
   };
 
+  // handling password input
   const handlePasswordInput = (passwordText: string) => {
     setPassword(passwordText);
     setPasswordValid(true);

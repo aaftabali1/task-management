@@ -1,62 +1,172 @@
-import React, {useState} from 'react';
-import {View, Text, FlatList, TouchableOpacity} from 'react-native';
-import styles from './styles'; // Importing the CSS styles
+import React, {useEffect, useState} from 'react';
+import {View, Text, FlatList, TouchableOpacity, Keyboard} from 'react-native';
 import {NavigationProp, useNavigation} from '@react-navigation/native';
+import database from '@react-native-firebase/database';
+import {firebase} from '@react-native-firebase/auth';
+
 import Container from '../../components/Container';
 import Header from '../../components/Header';
+import colors from '../../utils/colors';
+
+import styles from './styles';
 
 interface Task {
   id: string;
   title: string;
-  description: string;
-  status: 'To Do' | 'In Progress' | 'Done';
+  content: string;
+  status: 'todo' | 'progress' | 'done';
 }
 
 const Dashboard: React.FC = () => {
   const navigation = useNavigation<NavigationProp<any>>();
 
-  const [tasks, setTasks] = useState<Task[]>([
-    {id: 'asdf', title: 'asdf', description: 'asdf', status: 'To Do'},
-    {id: 'asdddfewf', title: 'asdf', description: 'asdf', status: 'To Do'},
-    {id: 'wfddef', title: 'asdf', description: 'asdf', status: 'To Do'},
-    {id: 'bafg', title: 'asdf', description: 'asdf', status: 'To Do'},
-    {id: 'ertert', title: 'asdf', description: 'asdf', status: 'To Do'},
-    {id: 'sfvd', title: 'asdf', description: 'asdf', status: 'To Do'},
-    {id: 'afddew', title: 'asdf', description: 'asdf', status: 'To Do'},
-    {id: 'vasdf', title: 'asdf', description: 'asdf', status: 'To Do'},
-    {id: 'erwerdddwef', title: 'asdf', description: 'asdf', status: 'To Do'},
-    {id: 'vasdasf', title: 'asdf', description: 'asdf', status: 'To Do'},
-    {id: 'asfqwfadf', title: 'asdf', description: 'asdf', status: 'To Do'},
-    {id: 'assfeasdf', title: 'asdf', description: 'asdf', status: 'To Do'},
-    {id: 'atertsdfasd', title: 'asdf', description: 'asdf', status: 'To Do'},
-  ]);
+  const [todos, setTodos] = useState<Task[]>([]);
+  const [filter, setFilter] = useState('all');
 
+  const filteredTodo = todos.filter(
+    todo => filter === 'all' || todo.status === filter,
+  );
+
+  // adding listener to get all tasks from firebase
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const user = firebase.auth().currentUser;
+        if (user) {
+          firebase
+            .database()
+            .ref(`/users/${user.uid}`)
+            .on('value', (snapshot: any) => {
+              const todoData = snapshot.val();
+
+              if (todoData) {
+                const todoArray = Object.entries(todoData).map(
+                  ([id, data]: any) => ({id, ...data}),
+                );
+                setTodos(todoArray);
+              }
+            });
+        }
+      } catch (error) {
+        console.error('Error fetching todos:', error);
+      }
+    };
+
+    // Fetching all the todo here!
+    fetchData();
+  }, []);
+
+  // Navigation to add todo task is handled here!
   const addTask = () => {
     navigation.navigate('AddTask');
+  };
+
+  // Handling delete todo here
+  const handleDeleteTodo = async (id: string) => {
+    try {
+      Keyboard.dismiss();
+      const user = firebase.auth().currentUser;
+      if (!user) {
+        return;
+      }
+      await database().ref(`/users/${user.uid}/${id}`).set(null);
+    } catch (error) {
+      console.error('Error adding todo:', error);
+    }
+  };
+
+  // Filter button render method
+  const renderFilterButtons = () => (
+    <View style={styles.filterContainer}>
+      <TouchableOpacity
+        onPress={() => setFilter('all')}
+        style={[
+          styles.filterBtn,
+          {
+            backgroundColor:
+              filter === 'all' ? colors.black : colors.placeholder,
+          },
+        ]}>
+        <Text style={styles.filterText}>All</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => setFilter('todo')}
+        style={[
+          styles.filterBtn,
+          {
+            backgroundColor:
+              filter === 'todo' ? colors.black : colors.placeholder,
+          },
+        ]}>
+        <Text style={styles.filterText}>To Do</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => setFilter('progress')}
+        style={[
+          styles.filterBtn,
+          {
+            backgroundColor:
+              filter === 'progress' ? colors.black : colors.placeholder,
+          },
+        ]}>
+        <Text style={styles.filterText}>In Progress</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => setFilter('done')}
+        style={[
+          styles.filterBtn,
+          {
+            backgroundColor:
+              filter === 'done' ? colors.black : colors.placeholder,
+            marginEnd: 0,
+          },
+        ]}>
+        <Text style={styles.filterText}>Done</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  // Todo item component
+  const todoItem = ({item}: {item: Task}) => {
+    return (
+      <View style={styles.taskContainer}>
+        <Text style={[styles.taskTitle, styles.flexOne]}>{item.title}</Text>
+        <View style={styles.flexOne}>
+          <Text style={styles.taskDescription}>{item.content}</Text>
+          <View style={styles.statusContainer}>
+            <Text
+              style={[styles.statusButton, getStatusButtonStyle(item.status)]}>
+              {item.status}
+            </Text>
+          </View>
+        </View>
+        <View style={styles.editContainer}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('AddTask', {task: item})}
+            style={styles.editBtn}>
+            <Text style={styles.editText}>Edit</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => handleDeleteTodo(item.id)}
+            style={styles.editBtn}>
+            <Text style={styles.editText}>Delete</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
   };
 
   return (
     <Container containerStyle={styles.container}>
       <Header title="Dashboard" />
+      <Text style={styles.filterHeading}>Filter</Text>
+      {renderFilterButtons()}
       <FlatList
-        data={tasks}
+        data={filteredTodo}
         showsVerticalScrollIndicator={false}
-        renderItem={({item}) => (
-          <View style={styles.taskContainer}>
-            <Text style={styles.taskTitle}>{item.title}</Text>
-            <Text style={styles.taskDescription}>{item.description}</Text>
-            <View style={styles.statusContainer}>
-              <Text
-                style={[
-                  styles.statusButton,
-                  getStatusButtonStyle(item.status),
-                ]}>
-                {item.status}
-              </Text>
-            </View>
-          </View>
-        )}
+        renderItem={todoItem}
         keyExtractor={item => item.id}
+        ListEmptyComponent={() => <Text>No tasks available</Text>}
       />
       <TouchableOpacity style={styles.floatingActionButton} onPress={addTask}>
         <Text style={styles.fabText}>+</Text>
@@ -68,11 +178,11 @@ const Dashboard: React.FC = () => {
 // Utility function to get style for status button based on status
 const getStatusButtonStyle = (status: Task['status']) => {
   switch (status) {
-    case 'To Do':
+    case 'todo':
       return styles.statusButtonToDo;
-    case 'In Progress':
+    case 'progress':
       return styles.statusButtonInProgress;
-    case 'Done':
+    case 'done':
       return styles.statusButtonDone;
     default:
       return null;

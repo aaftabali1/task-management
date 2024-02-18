@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   TouchableOpacityProps,
 } from 'react-native';
+
 import styles from './styles';
 
 interface CustomButtonnProps extends TouchableOpacityProps {

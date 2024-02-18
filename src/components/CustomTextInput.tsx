@@ -7,8 +7,10 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import styles from './styles';
+
 import colors from '../utils/colors';
+
+import styles from './styles';
 
 interface TextInputProps {
   placeholder?: string;

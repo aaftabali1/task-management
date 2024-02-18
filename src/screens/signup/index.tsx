@@ -1,10 +1,19 @@
 import React, {useState} from 'react';
-import {ActivityIndicator, Text, TouchableOpacity, View} from 'react-native';
-import Container from '../../components/Container';
-import styles from './styles';
+import {
+  ActivityIndicator,
+  Alert,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import {NavigationProp, useNavigation} from '@react-navigation/native';
+import auth from '@react-native-firebase/auth';
+
+import Container from '../../components/Container';
 import colors from '../../utils/colors';
 import CustomTextInput from '../../components/CustomTextInput';
+
+import styles from './styles';
 
 const Signup = () => {
   const navigation = useNavigation<NavigationProp<any>>();
@@ -18,7 +27,8 @@ const Signup = () => {
   const [fullName, setFullName] = useState('');
   const [nameValid, setNameValid] = useState(true);
 
-  const handleLogin = () => {
+  // handling sign up
+  const handleSignUp = async () => {
     if (email.trim() == '') {
       setEmailValid(false);
       return;
@@ -28,19 +38,33 @@ const Signup = () => {
       return;
     }
 
-    navigation.navigate('Dashboard');
+    try {
+      let response = await auth().createUserWithEmailAndPassword(
+        email,
+        password,
+      );
+      if (response) {
+        navigation.navigate('Dashboard');
+      }
+    } catch (e) {
+      console.error(e);
+      Alert.alert('Task management', 'Email is already registered!');
+    }
   };
 
+  // handling email input
   const handleEmailInput = (emailText: string) => {
     setEmail(emailText);
     setEmailValid(true);
   };
 
+  // handling password input
   const handlePasswordInput = (passwordText: string) => {
     setPassword(passwordText);
     setPasswordValid(true);
   };
 
+  // handling name input
   const handleNameInput = (nameText: string) => {
     setFullName(nameText);
     setNameValid(true);
@@ -71,7 +95,10 @@ const Signup = () => {
           placeholder="Password"
           error={!passwordValid}
         />
-        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+        <TouchableOpacity
+          testID="signUp"
+          style={styles.loginButton}
+          onPress={handleSignUp}>
           <Text style={styles.loginButtonText}>Sign Up</Text>
           {isLoading && <ActivityIndicator color={colors.white} />}
         </TouchableOpacity>

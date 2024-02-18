@@ -52,5 +52,6 @@ export default StyleSheet.create({
     fontSize: fontPixel(24),
     fontWeight: 'bold',
     paddingVertical: 20,
+    color: colors.black,
   },
 });

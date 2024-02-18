@@ -1,16 +1,17 @@
 import {StyleSheet} from 'react-native';
 import colors from '../../utils/colors';
+import {fontPixel} from '../../utils/constants';
 
 export default StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: colors.white,
   },
   taskContainer: {
     marginBottom: 20,
     padding: 10,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: colors.bgColor,
     borderRadius: 5,
   },
   taskTitle: {
@@ -31,7 +32,7 @@ export default StyleSheet.create({
     borderRadius: 5,
     marginRight: 10,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: colors.borderColor,
   },
   statusButtonToDo: {
     backgroundColor: 'lightblue',
@@ -60,5 +61,43 @@ export default StyleSheet.create({
   fabText: {
     fontSize: 24,
     color: 'white',
+  },
+  flexOne: {
+    flex: 1,
+  },
+  editText: {
+    color: colors.white,
+    fontSize: 14,
+  },
+  editBtn: {
+    backgroundColor: colors.black,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    borderRadius: 3,
+    paddingVertical: 2,
+    marginEnd: 20,
+  },
+  editContainer: {
+    flexDirection: 'row',
+    flex: 1,
+    marginTop: 5,
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    marginBottom: 20,
+  },
+  filterBtn: {
+    padding: 10,
+    borderRadius: 5,
+    marginEnd: 10,
+  },
+  filterText: {
+    color: colors.white,
+    textAlign: 'center',
+  },
+  filterHeading: {
+    color: colors.black,
+    fontSize: fontPixel(20),
+    marginBottom: 10,
   },
 });
